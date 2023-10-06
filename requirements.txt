@@ -7,3 +7,9 @@ fastapi==0.88.0
 uvicorn==0.20.0
 
 joblib==1.2.0
+
+catboost==1.1.1
+
+#torch==2.0.1
+#torchinfo==1.8.0
+#matplotlib==3.6.3

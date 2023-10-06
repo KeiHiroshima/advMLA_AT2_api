@@ -3,10 +3,24 @@ from starlette.responses import JSONResponse
 from joblib import load
 import pandas as pd
 
+from catboost import CatBoostRegressor, Pool
+
+"""
+from sklearn.metrics import mean_squared_error
+
+import torch
+import torch.nn as nn
+from torch.utils.data import DataLoader, TensorDataset
+from torchinfo import summary
+
+from models import LSTMModel
+"""
+
 
 app = FastAPI()
-model_cat = load("../models/catboost_100iterations.joblib")
-model_lstm = load("../models/lstm_win91_lr0001.joblib")
+model_cat = load("../models/catboost_100iterations_womovingaverage.joblib")
+# model_cat = load("../models/catboost_100iterations_womovingaverageid.joblib")
+# model_lstm = load("../models/lstm_win365_lr0001.joblib")
 
 
 @app.get("/")
@@ -46,7 +60,7 @@ def read_root():
     }
 
 
-@app.get("/health")
+@app.get("/health", status_code=200)
 def healthcheck():
     return "predictive/forecasting models are all ready to go."
 
@@ -55,15 +69,11 @@ def format_features_national(
     date: str,
     event_name: str,
     event_type: str,
-    moving_average_for_90_days: float,
-    moving_average_for_365_days: float,
 ):
     return {
         "date": [date],
         "event_name": [event_name],
         "event_type": [event_type],
-        "moving_average_for_90_days": [moving_average_for_90_days],
-        "moving_average_for_365_days": [moving_average_for_365_days],
     }
 
 
@@ -76,11 +86,9 @@ def format_features_items(
     state_id: str,
     event_name: str,
     event_type: str,
-    moving_average_for_90_days: float,
-    moving_average_for_365_days: float,
 ):
     return {
-        "date": [date],
+        # "date": [date],
         "item_id": [item_id],
         "dept_id": [dept_id],
         "cat_id": [cat_id],
@@ -88,8 +96,6 @@ def format_features_items(
         "state_id": [state_id],
         "event_name": [event_name],
         "event_type": [event_type],
-        "moving_average_for_90_days": [moving_average_for_90_days],
-        "moving_average_for_365_days": [moving_average_for_365_days],
     }
 
 
@@ -98,20 +104,17 @@ def predict(
     date: str,
     event_name: str,
     event_type: str,
-    moving_average_for_90_days: float,
-    moving_average_for_365_days: float,
 ):
     features = format_features_national(
         date,
         event_name,
         event_type,
-        moving_average_for_90_days,
-        moving_average_for_365_days,
     )
 
     obs = pd.DataFrame(features)
-    pred = model_lstm.predict(obs)
-    return JSONResponse(pred.tolist())
+    # pred = model_lstm.predict(obs)
+    return {"Hello": "World"}
+    # return JSONResponse(pred.tolist())
 
 
 @app.get("/sales/stores/items")
@@ -124,8 +127,6 @@ def predict(
     state_id: str,
     event_name: str,
     event_type: str,
-    moving_average_for_90_days: float,
-    moving_average_for_365_days: float,
 ):
     features = format_features_items(
         date,
@@ -136,8 +137,6 @@ def predict(
         state_id,
         event_name,
         event_type,
-        moving_average_for_90_days,
-        moving_average_for_365_days,
     )
 
     obs = pd.DataFrame(features)
